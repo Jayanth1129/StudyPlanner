@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | StudyMate AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome back! Let’s continue learning.{% endblock %}
+
+{% block content %}
+<div class="dashboard-page container-fluid py-4 px-3 px-md-4">
+
+    <div class="dashboard-hero-card mb-4">
+        <div class="row g-4 align-items-center">
+            <div class="col-12 col-xl-8">
+                <p class="hero-kicker mb-2">Weekly Progress</p>
+                <h2 class="hero-title mb-2">
+                    <span id="weeklyProgressPercent">{{ weekly_progress_percent }}</span>% completed this week
+                </h2>
+                <p class="hero-subtitle mb-3">
+                    You completed
+                    <span id="completedTasksCount">{{ completed_tasks_count }}</span>
+                    out of
+                    <span id="weeklyTasksCount">{{ weekly_tasks_count }}</span>
+                    tasks this week.
+                </p>
+
+                <div class="custom-progress mb-3">
+                    <div
+                        id="weeklyProgressBar"
+                        class="custom-progress-bar"
+                        style="width: {{ weekly_progress_percent }}%;"
+                    ></div>
+                </div>
+
+                <div class="hero-motivation">
+                    <h5 class="mb-1">{{ motivation_title }}</h5>
+                    <p class="mb-0">{{ motivation_text }}</p>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="level-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="level-label mb-1">Current Level</p>
+                            <h3 class="level-number mb-0">Level {{ xp_data.level }}</h3>
+                        </div>
+                        <div class="xp-badge">
+                            <i class="bi bi-stars"></i>
+                            <span>{{ xp_points }} XP</span>
+                        </div>
+                    </div>
+
+                    <div class="level-progress mb-2">
+                        <div class="level-progress-bar" style="width: {{ xp_data.progress_percent }}%;"></div>
+                    </div>
+
+                    <p class="level-meta mb-0">
+                        {{ xp_data.current_xp }} / {{ xp_data.next_level_xp }} XP toward next level
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="dashboard-card stat-card streak-card h-100">
+                <div class="stat-icon streak-icon">
+                    <i class="bi bi-fire"></i>
+                </div>
+                <p class="stat-label">Current Streak</p>
+                <h3 class="stat-number">{{ current_streak }}</h3>
+                <p class="stat-subtext mb-3">Days in a row</p>
+
+                <div class="week-tracker">
+                    {% for day in week_days %}
+                        <div class="week-day {% if day.done %}done{% endif %} {% if day.is_today %}today{% endif %}">
+                            <span>{{ day.label|slice:":1" }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="dashboard-card stat-card h-100">
+                <div class="stat-icon task-icon">
+                    <i class="bi bi-check2-square"></i>
+                </div>
+                <p class="stat-label">Tasks Today</p>
+                <h3 class="stat-number">{{ todays_tasks_count }}</h3>
+                <p class="stat-subtext mb-0">Ready to complete</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="dashboard-card stat-card h-100">
+                <div class="stat-icon hours-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <p class="stat-label">Study Hours</p>
+                <h3 class="stat-number">{{ total_study_hours }}</h3>
+                <p class="stat-subtext mb-0">Tracked this week</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="dashboard-card stat-card h-100">
+                <div class="stat-icon xp-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <p class="stat-label">XP Points</p>
+                <h3 class="stat-number">{{ xp_points }}</h3>
+                <p class="stat-subtext mb-0">Keep earning rewards</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-xl-6">
+            <div class="dashboard-card challenge-card h-100">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-bullseye challenge-title-icon"></i>
+                    <h4 class="bottom-title mb-0">Weekly Challenge</h4>
+                </div>
+
+                <div class="challenge-block mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="challenge-label">Complete {{ weekly_goal_tasks }} tasks</span>
+                        <span class="challenge-value">{{ completed_tasks_count }}/{{ weekly_goal_tasks }}</span>
+                    </div>
+                    <div class="mini-progress">
+                        <div class="mini-progress-bar" style="width: {{ task_goal_progress }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="challenge-block">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="challenge-label">Study {{ weekly_goal_hours }} hours</span>
+                        <span class="challenge-value">{{ total_study_hours }}/{{ weekly_goal_hours }}</span>
+                    </div>
+                    <div class="mini-progress hours-progress">
+                        <div class="mini-progress-bar" style="width: {{ hours_goal_progress }}%;"></div>
+                    </div>
+                </div>
+
+                {% if next_badge %}
+                    <div class="next-reward-box mt-4">
+                        <p class="next-reward-label mb-1">Next reward</p>
+                        <h5 class="next-reward-title mb-1">{{ next_badge.name }}</h5>
+                        <p class="next-reward-text mb-0">
+                            Keep studying to unlock your next badge.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="dashboard-card badges-card h-100">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-patch-check-fill badge-title-icon"></i>
+                    <h4 class="bottom-title mb-0">Achievements</h4>
+                </div>
+
+                {% if earned_badges %}
+                    <div class="badge-grid">
+                        {% for earned in earned_badges %}
+                            <div class="achievement-item">
+                                <div class="achievement-icon">
+                                    {% if earned.badge.icon %}
+                                        <img src="{{ earned.badge.icon.url }}" alt="{{ earned.badge.name }}">
+                                    {% else %}
+                                        <i class="bi bi-award-fill"></i>
+                                    {% endif %}
+                                </div>
+                                <p class="achievement-name mb-0">{{ earned.badge.name }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-achievement-state">
+                        <h5 class="empty-title-sm">Your first badge is waiting</h5>
+                        <p class="empty-text-muted mb-0">
+                            Complete tasks and log study sessions to start unlocking achievements.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-6">
+            <div class="dashboard-card bottom-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="bottom-title mb-0">Today’s Tasks</h4>
+                    <a href="{% url 'all_tasks' %}" class="view-all-link">View all</a>
+                </div>
+
+                {% if todays_tasks %}
+                    <div class="task-list d-flex flex-column gap-3">
+                        {% for task in todays_tasks %}
+                            <button
+                                type="button"
+                                class="task-item-btn d-flex align-items-center gap-3"
+                                data-task-id="{{ task.id }}"
+                                onclick="toggleTaskAjax(this)"
+                            >
+                                <span class="task-check {% if task.status == 'completed' %}checked{% endif %}">
+                                    {% if task.status == 'completed' %}
+                                        <i class="bi bi-check-lg"></i>
+                                    {% endif %}
+                                </span>
+
+                                <span class="flex-grow-1 text-start">
+                                    <span class="task-name {% if task.status == 'completed' %}completed{% endif %}">
+                                        {{ task.user_subject.subject.name }}
+                                    </span>
+                                    <span class="task-meta d-block">
+                                        {{ task.planned_hours }} hr planned · +{{ task.planned_hours|floatformat:0 }} XP
+                                    </span>
+                                </span>
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <h5 class="empty-title">Stay on track today</h5>
+                        <p class="empty-text mb-2">No tasks for today</p>
+                        <p class="empty-text-muted">
+                            You are all caught up. Generate a new plan or review your upcoming exams.
+                        </p>
+                        <a href="{% url 'study_plan' %}" class="btn btn-primary dashboard-soft-btn mt-2">Generate Plan</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="dashboard-card bottom-card h-100">
+                <h4 class="bottom-title mb-4">Continue Studying</h4>
+
+                {% if continue_subject %}
+                    <a href="{% url 'all_subjects' %}" class="continue-box-link text-decoration-none">
+                        <div class="continue-box">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                                <h5 class="continue-subject mb-0">
+                                    {{ continue_subject.subject.name }}
+                                </h5>
+                                <span class="continue-time">Last studied {{ continue_last_studied_text }}</span>
+                            </div>
+
+                            <div class="continue-progress mb-2">
+                                <div class="continue-progress-bar" style="width: {{ continue_percent }}%;"></div>
+                            </div>
+
+                            <p class="continue-meta mb-0">
+                                {{ continue_percent }}% complete · {{ continue_total_minutes }} min studied
+                            </p>
+                        </div>
+                    </a>
+                {% else %}
+                    <div class="empty-state">
+                        <h5 class="empty-title">Pick up where you left off</h5>
+                        <p class="empty-text mb-2">No recent study session</p>
+                        <p class="empty-text-muted">
+                            Start studying one of your subjects and it will appear here.
+                        </p>
+                        <a href="{% url 'all_subjects' %}" class="btn btn-primary dashboard-soft-btn mt-2">View Subjects</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCSRFToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                return cookie.substring('csrftoken='.length);
+            }
+        }
+        return '';
+    }
+
+    function toggleTaskAjax(button) {
+        const taskId = button.dataset.taskId;
+        const check = button.querySelector('.task-check');
+        const name = button.querySelector('.task-name');
+
+        button.disabled = true;
+
+        fetch(`/tasks/toggle-ajax/${taskId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || 'Something went wrong.');
+                return;
+            }
+
+            if (data.status === 'completed') {
+                check.classList.add('checked');
+                name.classList.add('completed');
+                check.innerHTML = '<i class="bi bi-check-lg"></i>';
+            } else {
+                check.classList.remove('checked');
+                name.classList.remove('completed');
+                check.innerHTML = '';
+            }
+
+            document.getElementById('weeklyProgressPercent').textContent = data.weekly_progress_percent;
+            document.getElementById('completedTasksCount').textContent = data.completed_tasks_count;
+            document.getElementById('weeklyTasksCount').textContent = data.weekly_tasks_count;
+            document.getElementById('weeklyProgressBar').style.width = `${data.weekly_progress_percent}%`;
+        })
+        .catch(() => {
+            alert('Something went wrong while updating the task.');
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+    }
+</script>
+{% endblock %}

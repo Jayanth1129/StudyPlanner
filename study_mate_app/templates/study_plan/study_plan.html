@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Study Plan AI{% endblock %}
+{% block page_subtitle %}Generate your personalized weekly study plan{% endblock %}
+
+{% block content %}
+
+<!-- Generate Plan Form -->
+<div class="card shadow-sm border-0 mb-5 bg-white rounded-4">
+    <div class="card-body p-4">
+        <h5 class="fw-bold mb-3 text-primary">Generate New Plan</h5>
+        <form action="/study-plan/generate/" method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-dark">Available Study Hours Per Day</label>
+                <input type="number" name="available_hours" class="form-control border-info"
+                    min="1" max="12" placeholder="e.g. 4" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-dark">Blocked Days (no studying)</label>
+                <div class="d-flex flex-wrap gap-3">
+                    {% for day in days %}
+                    <div class="form-check">
+                        <input class="form-check-input  border-info" type="checkbox"
+                            name="blocked_days" value="{{ day }}" id="{{ day }}">
+                        <label class="form-check-label text-secondary" for="{{ day }}">{{ day }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-info text-white px-4 shadow-sm">
+                ✨ Generate Plan
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if latest_plan %}
+
+<h4 class="fw-bold mb-3 text-primary">Your Current Plan
+    <small class="text-muted fs-6">— Week of {{ latest_plan.week_start }}</small>
+</h4>
+
+<div id="studyPlanCalendar" class="shadow-sm rounded-4 overflow-hidden"></div>
+
+<script>
+const studyPlanEvents = [
+    {% for item in latest_plan.plan_items.all %}
+    {
+        title: "{{ item.user_subject.subject.name|escapejs }} - {{ item.planned_hours }}h",
+        start: "{{ item.study_date|escapejs }}",
+        color: "{% if item.status == 'completed' %}#198754{% else %}#0dcaf0{% endif %}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+
+{% else %}
+
+<div class="text-center mt-5 p-5 bg-info-subtle rounded-4">
+    <h5 class="text-secondary mb-2">No study plan yet.</h5>
+    <p class="text-muted mb-0">Generate your first plan above! 🚀</p>
+</div>
+
+{% endif %}
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('studyPlanCalendar');
+    if (!calendarEl) return;
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: 650,
+        events: typeof studyPlanEvents !== 'undefined' ? studyPlanEvents : [],
+    });
+    calendar.render();
+});
+</script>
+
+{% endblock %}

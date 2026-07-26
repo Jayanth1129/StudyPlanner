@@ -1,0 +1,8 @@
+Django==5.2.11
+httpx==0.28.1
+openai==2.31.0
+python-dotenv==1.2.2
+bcrypt==5.0.0
+pillow==12.1.1
+django-anymail==14.0
+requests==2.33.0
